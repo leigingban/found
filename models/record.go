@@ -10,6 +10,7 @@ type Record struct {
 	value float64
 }
 
+// ValueGetter 获取总金额并缓存
 func (r *Record) ValueGetter() float64 {
 	if r.value == 0 {
 		r.value = r.Price * r.Count
