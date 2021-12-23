@@ -5,11 +5,13 @@ const BuyPercent uint = 3
 type Found struct {
 	Id            string
 	Name          string
-	Amount        float64
-	count         float64
-	PriceOfMine   float64 //当前基金的平均净值
-	PriceEarly    float64 //前一个交易日净值
-	PriceRealTime float64 //实时动态净值
+	AmountAct     float64 //实际总投入
+	AmountNow     float64 //实时净值
+	count         float64 //份额
+	RateYesterday float64
+	RateToday     float64
+	RateRealTime  float64
+	PriceAct      float64
 	PriceToday    float64 //今天的净值
 	Records       []*Record
 	lowPoint      *Record
@@ -33,19 +35,19 @@ func (f *Found) GetLowestPoint() *Record {
 	return f.lowPoint
 }
 
-// AmountGetter 获取总额
-func (f *Found) AmountGetter() float64 {
+// AmountActGetter 获取总额
+func (f *Found) AmountActGetter() float64 {
 	// 如果有缓存直接返回
-	if f.Amount != 0 {
-		return f.Amount
+	if f.AmountAct != 0 {
+		return f.AmountAct
 	}
 	// 累计金额
 	var amount float64
 	for _, record := range f.Records {
 		amount += record.ValueGetter()
 	}
-	f.Amount = amount
-	return f.Amount
+	f.AmountAct = amount
+	return f.AmountAct
 }
 
 // CountGetter 获取总得份额
@@ -56,8 +58,16 @@ func (f Found) CountGetter() float64 {
 	return f.count
 }
 
-// PriceOfMineGetter 获取等效净值
-func (f *Found) PriceOfMineGetter() float64 {
-	f.PriceOfMine = f.AmountGetter() / f.CountGetter()
-	return f.PriceOfMine
+// PriceActMineGetter 获取等效净值
+func (f *Found) PriceActMineGetter() float64 {
+	if f.PriceAct != 0 {
+		return f.PriceAct
+	}
+	f.PriceAct = f.AmountActGetter() / f.CountGetter()
+	return f.PriceAct
+}
+
+// 待完善
+func (f *Found) Balance() float64 {
+	return 0
 }
