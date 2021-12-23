@@ -7,10 +7,10 @@ type Found struct {
 	Name          string
 	Amount        float64
 	count         float64
-	PriceOfMine   float64  //当前基金的平均净值
-	PriceEarly    float64  //前一个交易日净值
-	PriceRealTime float64  //实时动态净值
-	PriceToday    float640 //今天的净值
+	PriceOfMine   float64 //当前基金的平均净值
+	PriceEarly    float64 //前一个交易日净值
+	PriceRealTime float64 //实时动态净值
+	PriceToday    float64 //今天的净值
 	Records       []*Record
 	lowPoint      *Record
 }
@@ -40,7 +40,7 @@ func (f *Found) AmountGetter() float64 {
 		return f.Amount
 	}
 	// 累计金额
-	var amount int
+	var amount float64
 	for _, record := range f.Records {
 		amount += record.ValueGetter()
 	}
@@ -53,8 +53,10 @@ func (f Found) CountGetter() float64 {
 	for _, record := range f.Records {
 		f.count += record.Count
 	}
+	return f.count
 }
 
+// PriceOfMineGetter 获取等效净值
 func (f *Found) PriceOfMineGetter() float64 {
 	f.PriceOfMine = f.AmountGetter() / f.CountGetter()
 	return f.PriceOfMine
