@@ -11,7 +11,7 @@ func (m *Manger) TotalAmountGetter() float64 {
 	}
 	var total float64
 	for _, found := range m.Founds {
-		total += found.AmountGetter()
+		total += found.AmountActGetter()
 	}
 	m.totalAmount = total
 	return m.totalAmount
