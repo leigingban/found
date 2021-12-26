@@ -1,17 +1,58 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"log"
+	"strconv"
+	"time"
+)
+
+//DATEFORMAT 日期参考格式
+//const DATEFORMAT = "2006-01-02 15:04:05"
+const DATEFORMAT = "20060102"
+
+//Shanghai 标准时区
+var Shanghai *time.Location
+
+func init() {
+	// BUG FXI "panic: time: missing Location in call to Date"
+	// 修复丢失时区错误，在正常window下会有此问题发生，详情直接搜索上述错误
+
+	//var err error
+	//Shanghai, err = time.LoadLocation("Asia/Shanghai")
+	//if err != nil {
+	//	Shanghai = time.FixedZone("CST", 8*60*60)
+	//}
+	Shanghai = time.FixedZone("CST", 8*60*60)
+}
 
 // Record 记录每一次购买记录，用于统计和计算是否抄底或抄多少
 type Record struct {
-	TTime time.Time
-	Price float64
-	Count float64
-	value float64
+	Date       time.Time
+	Price      float64
+	Count      float64
+	value      float64
+	nextRecord *Record
 }
 
-// ValueGetter 获取总金额并缓存
-func (r *Record) ValueGetter() float64 {
+func CreateRecord(price string, count string, date string) *Record {
+	var err error
+	record := new(Record)
+
+	record.Price, err = strconv.ParseFloat(price, 64)
+	record.Count, err = strconv.ParseFloat(count, 64)
+	record.Date, err = time.ParseInLocation(DATEFORMAT, date, Shanghai)
+
+	if err != nil {
+		log.Printf("创建Record错误，错误数据: price->%s, count->%s, date->%s", price, count, date)
+		log.Println("|-- Err: ", err)
+		return nil
+	}
+	return record
+}
+
+// LocalBuyAmountGetter 获取总金额并缓存
+func (r *Record) LocalBuyAmountGetter() float64 {
 	if r.value == 0 {
 		r.value = r.Price * r.Count
 	}
@@ -20,4 +61,22 @@ func (r *Record) ValueGetter() float64 {
 
 func (r *Record) LowerThan(other *Record) bool {
 	return r.Price < other.Price
+}
+
+func (r Record) PriceToString() string {
+	return fmt.Sprintf("%.4f", r.Price)
+}
+
+func (r Record) CountToString() string {
+	return fmt.Sprintf("%.2f", r.Count)
+}
+
+func (r Record) DateToString() string {
+	return r.Date.Format(DATEFORMAT)
+}
+
+func (r Record) String() string {
+	var raw string
+	raw += fmt.Sprintf("┝-\n")
+	return raw
 }
