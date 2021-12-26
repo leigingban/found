@@ -41,13 +41,13 @@ func Fix1234567Json(body []byte) []byte {
 }
 
 type Raw struct {
-	Fundcode string  `json:"fundcode"`     // 基金代号
-	Name     string  `json:"name"`         // 基金名称
-	Jzrq     string  `json:"jzrq"`         // 上一个净值日期
-	Dwjz     float64 `json:"dwjz,string"`  // 上一个净值
-	Gsz      float64 `json:"gsz,string"`   // 今天净值
-	Gszzl    float64 `json:"gszzl,string"` // 今天增幅
-	Gztime   string  `json:"gztime"`       // 最后更新时间
+	Fundcode         string  `json:"fundcode"`     // 基金代号
+	Name             string  `json:"name"`         // 基金名称
+	WebPreviousDate  string  `json:"jzrq"`         // 上一个净值日期
+	WebPreviousPrice float64 `json:"dwjz,string"`  // 上一个净值
+	WebNowPrice      float64 `json:"gsz,string"`   // 今天净值
+	WebNowRate       float64 `json:"gszzl,string"` // 今天增幅
+	WebNowTime       string  `json:"gztime"`       // 最后更新时间
 }
 
 // GetFundInfoByID 通过爬虫获取原始数据
