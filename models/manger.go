@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/leigingban/found/TTSpider"
 	"io"
 	"log"
 	"os"
@@ -30,15 +31,6 @@ func (m *Manger) CsvPathGetter() string {
 		m.CsvPath = defaultPath
 		return defaultPath
 	}
-}
-
-// LocalBuyAmountGetter 获取总份额
-func (m *Manger) LocalBuyAmountGetter() float64 {
-	var total float64
-	for _, found := range m.Founds {
-		total += found.LocalBuyAmountGetter()
-	}
-	return total
 }
 
 // getOrAddFoundByCode 查询或者获取相应的基金
@@ -110,25 +102,45 @@ func (m *Manger) SaveToCSV() {
 	fmt.Println("done")
 }
 
-func (m Manger) FoundCodesStringGetter() string {
-	var raw string
+func (m Manger) FoundCodesStringsGetter() []string {
+	var raw []string
 	for foundCode := range m.Founds {
-		raw += foundCode + ","
+		raw = append(raw, foundCode)
 	}
-	return raw[:len(raw)-1]
+	return raw
 }
 
 func (m *Manger) UpToDate() {
-	for s, found := range m.Founds {
-		fmt.Println("updating ", s)
-		found.UpdateFromWeb()
+	datas, err := TTSpider.GetFundInfoByIDsV2(m.FoundCodesStringsGetter())
+	if err != nil {
+		log.Println("从网络更新数据时发生错误: ", err)
+	}
+	for _, data := range datas {
+		found := m.getOrAddFoundByCode(data.FCODE)
+		found.UpdateFromData(data)
 	}
 }
 
-func (m Manger) PreviousAmountGetter() float64 {
+func (m Manger) GuestAmountGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
-		amount += found.PreviousAmountGetter()
+		amount += found.GuestAmountGetter()
+	}
+	return amount
+}
+
+func (m Manger) FinalAmountGetter() float64 {
+	var amount float64
+	for _, found := range m.Founds {
+		amount += found.FinalAmountGetter()
+	}
+	return amount
+}
+
+func (m Manger) LocalBuyAmountGetter() float64 {
+	var amount float64
+	for _, found := range m.Founds {
+		amount += found.LocalBuyAmountGetter()
 	}
 	return amount
 }
@@ -137,10 +149,9 @@ func (m Manger) String() string {
 	var raw string
 
 	raw += fmt.Sprintf("明细:\n")
-	raw += fmt.Sprintf("[总: %.2f, 收: %.2f, 幅: %.2f]\n",
-		m.LocalBuyAmountGetter(),
-		m.PreviousAmountGetter(),
-		(m.PreviousAmountGetter()/m.LocalBuyAmountGetter()-1)*100)
+	raw += fmt.Sprintf("*总投: %.2f \n", m.LocalBuyAmountGetter())
+	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.GuestAmountGetter(), m.GuestAmountGetter()-m.LocalBuyAmountGetter())
+	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.FinalAmountGetter(), m.FinalAmountGetter()-m.LocalBuyAmountGetter())
 
 	for _, found := range m.Founds {
 		raw += found.String()

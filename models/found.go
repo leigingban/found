@@ -3,25 +3,25 @@ package models
 import (
 	"fmt"
 	"github.com/leigingban/found/TTSpider"
-	"log"
 )
 
 const BuyPercent uint = 3
 
 type Found struct {
-	Fundcode         string
-	Name             string
-	WebPreviousDate  string
-	WebPreviousPrice float64
-	WebNowPrice      float64
-	WebNowRate       float64
-	WebNowTime       string
-	LocalBuyAmount   float64
-	LocalNowAmount   float64
-	LocalBuyCount    float64
-	PreviousAmount   float64 // 截止最新总额
-	Records          []*Record
-	lowestPoint      *Record
+	Fundcode       string
+	Name           string
+	WebFinalPrice  float64
+	WebGuessPrice  float64
+	WebFinalRate   float64
+	WebGuessRate   float64
+	LocalBuyAmount float64
+	LocalNowAmount float64 //当天总额
+	LocalBuyCount  float64
+	GuestAmount    float64
+	FinalAmount    float64
+	Records        []*Record
+	lowestPoint    *Record
+	Remark         string
 }
 
 func CreateFound(foundCode string) *Found {
@@ -48,19 +48,6 @@ func (f *Found) GetLowestPoint() *Record {
 	// 运算完毕后再赋值
 	f.lowestPoint = lower
 	return lower
-}
-
-// PreviousAmountGetter 获取总额
-func (f *Found) PreviousAmountGetter() float64 {
-	// 如果有缓存直接返回
-	if f.PreviousAmount != 0 {
-		return f.PreviousAmount
-	}
-	// 累计金额
-	var amount float64
-	amount = f.WebPreviousPrice * f.LocalBuyCountGetter()
-	f.PreviousAmount = amount
-	return amount
 }
 
 // LocalBuyAmountGetter 获取总额
@@ -93,21 +80,29 @@ func (f *Found) LocalBuyCountGetter() float64 {
 	return count
 }
 
-// UpdateFromWeb 从网上更新自身信息
-func (f *Found) UpdateFromWeb() {
+// UpdateFromData 从网上更新自身信息
+func (f *Found) UpdateFromData(data TTSpider.Data) {
+	f.Name = data.SHORTNAME
+	f.WebGuessRate = data.GSZZL
+	f.WebGuessPrice = data.GSZ
+	f.WebFinalRate = data.NAVCHGRT
+	f.WebFinalPrice = data.NAV //data.NAV
+}
 
-	raw, err := TTSpider.GetFundInfoByID(f.Fundcode)
-	if err != nil {
-		log.Println(err)
+func (f *Found) GuestAmountGetter() float64 {
+	if f.GuestAmount != 0 {
+		return f.GuestAmount
 	}
+	f.GuestAmount = f.LocalBuyCountGetter() * f.WebGuessPrice
+	return f.GuestAmount
+}
 
-	f.Name = raw.Name
-	f.WebPreviousDate = raw.WebPreviousDate
-	f.WebPreviousPrice = raw.WebPreviousPrice
-	f.WebNowPrice = raw.WebNowPrice
-	f.WebNowRate = raw.WebNowRate
-	f.WebNowTime = raw.WebNowTime
-
+func (f *Found) FinalAmountGetter() float64 {
+	if f.FinalAmount != 0 {
+		return f.FinalAmount
+	}
+	f.FinalAmount = f.LocalBuyCountGetter() * f.WebFinalPrice
+	return f.FinalAmount
 }
 
 func (f *Found) AddRecord(price string, count string, date string) {
@@ -136,8 +131,13 @@ func (f Found) LocalBuyAmountToString() string {
 
 func (f Found) String() string {
 	var raw string
-	fmt.Println("份额: ", f.LocalBuyCountGetter())
-	fmt.Println("净值: ", f.WebPreviousPrice)
-	fmt.Println(f.LocalBuyCountGetter() * f.WebPreviousPrice)
+	raw += fmt.Sprintf("--- %s ---\n", f.Name)
+	raw += fmt.Sprintf(" |- 代号: %s\n", f.Fundcode)
+	raw += fmt.Sprintf(" |- 份额: %.2f\n", f.LocalBuyCountGetter())
+	raw += fmt.Sprintf(" |- 预计: %.2f (%.2f)\n", f.GuestAmountGetter(), f.GuestAmountGetter()-f.LocalBuyAmountGetter())
+	raw += fmt.Sprintf(" |- 净值: %.2f (%.2f)\n", f.FinalAmountGetter(), f.FinalAmountGetter()-f.LocalBuyAmountGetter())
+	raw += fmt.Sprintf(" |- 预涨: %.2f%%\n", f.WebGuessRate)
+	raw += fmt.Sprintf(" |- 总涨: %.2f%%\n", (f.FinalAmountGetter()/f.LocalBuyAmountGetter()-1)*100)
+	raw += fmt.Sprintf(" |- 备注: %s\n", f.Remark)
 	return raw
 }
