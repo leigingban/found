@@ -104,7 +104,7 @@ func (m *Manger) SaveToCSV() {
 	fmt.Println("done")
 }
 
-// 获取相应基金列表
+// FoundCodesListGetter 获取相应基金列表
 func (m Manger) FoundCodesListGetter() []string {
 	var raw []string
 	for foundCode := range m.Founds {
@@ -113,41 +113,41 @@ func (m Manger) FoundCodesListGetter() []string {
 	return raw
 }
 
-// 通过爬虫爬取数据并更新found数据
+// UpToDate 通过爬虫爬取数据并更新found数据
 func (m *Manger) UpToDate() {
-	datas, err := TTSpider.Get包FundInfoByIDsV2(m.FoundCodesStringsGetter())
+	dataList, err := TTSpider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
 	if err != nil {
 		log.Println("从网络更新数据时发生错误: ", err)
 	}
-	for _, data := range datas {
+	for _, data := range dataList {
 		found := m.getOrAddFoundByCode(data.FCODE)
 		found.UpdateFromData(data)
 	}
 }
 
-// 获取总的估算总值
+// AmountGuessGetter 获取总的估算总值
 func (m Manger) AmountGuessGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
-		amount += found.GuestAmountGetter()
+		amount += found.AmountGuessGetter()
 	}
 	return amount
 }
 
-// 获取最新的总值
+// AmountLatestGetter 获取最新的总值
 func (m Manger) AmountLatestGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
-		amount += found.FinalAmountGetter()
+		amount += found.AmountLatestGetter()
 	}
 	return amount
 }
 
-// 获取总投入
-func (m Manger) AmountBuyGetter() float64 {
+// AmountBoughtGetter 获取总投入
+func (m Manger) AmountBoughtGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
-		amount += found.LocalBuyAmountGetter()
+		amount += found.AmountBoughtGetter()
 	}
 	return amount
 }
@@ -157,9 +157,9 @@ func (m Manger) String() string {
 	var raw string
 
 	raw += fmt.Sprintf("明细:\n")
-	raw += fmt.Sprintf("*总投: %.2f \n", m.LocalBuyAmountGetter())
-	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.GuestAmountGetter(), m.GuestAmountGetter()-m.LocalBuyAmountGetter())
-	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.FinalAmountGetter(), m.FinalAmountGetter()-m.LocalBuyAmountGetter())
+	raw += fmt.Sprintf("*总投: %.2f \n", m.AmountBoughtGetter())
+	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.AmountGuessGetter(), m.AmountGuessGetter()-m.AmountBoughtGetter())
+	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.AmountLatestGetter(), m.AmountLatestGetter()-m.AmountBoughtGetter())
 
 	for _, found := range m.Founds {
 		raw += found.String()

@@ -24,7 +24,7 @@ type Data struct {
 	NAVCHGRT        float64     `json:"NAVCHGRT,string"` // 日涨幅
 	GSZ             float64     `json:"GSZ,string"`      // 净值估算
 	GSZZL           float64     `json:"GSZZL,string"`    // 估算涨幅
-	GZTIME          string      `json:"GZTIME"`          // 估算的时间??
+	GZTIME          string      `json:"GZTIME"`          // 估算的时间
 	NEWPRICE        interface{} `json:"NEWPRICE"`
 	CHANGERATIO     interface{} `json:"CHANGERATIO"`
 	ZJL             interface{} `json:"ZJL"`
