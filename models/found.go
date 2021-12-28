@@ -2,28 +2,31 @@ package models
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/leigingban/found/TTSpider"
 )
 
 const BuyPercent uint = 3
 
 type Found struct {
-	Fundcode       string
-	Name           string
-	WebFinalPrice  float64
-	WebGuessPrice  float64
-	WebFinalRate   float64
-	WebGuessRate   float64
-	LocalBuyAmount float64
-	LocalNowAmount float64 //当天总额
-	LocalBuyCount  float64
-	GuestAmount    float64
-	FinalAmount    float64
-	Records        []*Record
-	lowestPoint    *Record
-	Remark         string
+	Fundcode     string     //基金代号
+	Name         string     //基金名称
+	DateLarest   *time.Time //更新(最新)日期
+	PriceBuy     float64    //买入净值
+	PriceLatest  float64    //最新净值
+	PriceGuess   float64    //估算净值
+	RateLatest   float64    //最新涨幅
+	RateGuess    float64    //估算涨幅
+	AmountBuy    float64    //买入总值
+	AmountLatest float64    //最新总值
+	AmountGuess  float64    //估算总值
+	Records      []*Record  //购买记录
+	lowestPoint  *Record    //买入最低点
+	Remark       string     //备注
 }
 
+// 创建一个Found
 func CreateFound(foundCode string) *Found {
 	found := &Found{}
 	found.Fundcode = foundCode
@@ -89,6 +92,7 @@ func (f *Found) UpdateFromData(data TTSpider.Data) {
 	f.WebFinalPrice = data.NAV //data.NAV
 }
 
+// 获取估算总值
 func (f *Found) GuestAmountGetter() float64 {
 	if f.GuestAmount != 0 {
 		return f.GuestAmount
@@ -97,6 +101,7 @@ func (f *Found) GuestAmountGetter() float64 {
 	return f.GuestAmount
 }
 
+// 获取最新总值
 func (f *Found) FinalAmountGetter() float64 {
 	if f.FinalAmount != 0 {
 		return f.FinalAmount
@@ -105,6 +110,7 @@ func (f *Found) FinalAmountGetter() float64 {
 	return f.FinalAmount
 }
 
+// 加入购买记录
 func (f *Found) AddRecord(price string, count string, date string) {
 	// 添加时将计算好的缓存重设
 	f.LocalBuyAmount = 0
@@ -121,14 +127,17 @@ func (f *Found) AddRecord(price string, count string, date string) {
 	f.Records = append(f.Records, record)
 }
 
-func (f *Found) IDisEqual(fundCode string) bool {
+//根据id判断Found,用于辅助查询Found
+func (f *Found) iDisEqual(fundCode string) bool {
 	return f.Fundcode == fundCode
 }
 
+//计算总投入
 func (f Found) LocalBuyAmountToString() string {
 	return fmt.Sprintf("%.2f", f.LocalBuyAmount)
 }
 
+//展示文本
 func (f Found) String() string {
 	var raw string
 	raw += fmt.Sprintf("--- %s ---\n", f.Name)

@@ -18,8 +18,8 @@ func NewHttpClient() *http.Client {
 type Data struct {
 	FCODE           string      `json:"FCODE"`
 	SHORTNAME       string      `json:"SHORTNAME"`
-	PDATE           string      `json:"PDATE"`
-	NAV             float64     `json:"NAV,string"`      // 净值
+	PDATE           string      `json:"PDATE"`           // 净值日期，一般为上一个交易日净值，如当天是交易日，晚上会更新为当天
+	NAV             float64     `json:"NAV,string"`      // 最新净值
 	ACCNAV          float64     `json:"ACCNAV,string"`   // 累计净值
 	NAVCHGRT        float64     `json:"NAVCHGRT,string"` // 日涨幅
 	GSZ             float64     `json:"GSZ,string"`      // 净值估算
@@ -39,7 +39,7 @@ type Expansion struct {
 
 type RawV2 struct {
 	Datas        []Data      `json:"Datas"`
-	ErrCode      int         `json:"ErrCode"`
+	ErrCode      int         `json:"ErrCode"` // 无错误时此项为0
 	Success      bool        `json:"Success"`
 	ErrMsg       interface{} `json:"ErrMsg"`
 	Message      interface{} `json:"Message"`

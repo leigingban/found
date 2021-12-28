@@ -3,16 +3,18 @@ package models
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/leigingban/found/TTSpider"
 	"io"
 	"log"
 	"os"
+
+	"github.com/leigingban/found/TTSpider"
 )
 
+//默认文件路径
 const defaultPath = "found.csv"
 
 type Manger struct {
-	Founds  map[string]*Found
+	Founds  map[string]*Found //映射，通过id索引相应的found
 	CsvPath string
 }
 
@@ -102,7 +104,8 @@ func (m *Manger) SaveToCSV() {
 	fmt.Println("done")
 }
 
-func (m Manger) FoundCodesStringsGetter() []string {
+// 获取相应基金列表
+func (m Manger) FoundCodesListGetter() []string {
 	var raw []string
 	for foundCode := range m.Founds {
 		raw = append(raw, foundCode)
@@ -110,8 +113,9 @@ func (m Manger) FoundCodesStringsGetter() []string {
 	return raw
 }
 
+// 通过爬虫爬取数据并更新found数据
 func (m *Manger) UpToDate() {
-	datas, err := TTSpider.GetFundInfoByIDsV2(m.FoundCodesStringsGetter())
+	datas, err := TTSpider.Get包FundInfoByIDsV2(m.FoundCodesStringsGetter())
 	if err != nil {
 		log.Println("从网络更新数据时发生错误: ", err)
 	}
@@ -121,7 +125,8 @@ func (m *Manger) UpToDate() {
 	}
 }
 
-func (m Manger) GuestAmountGetter() float64 {
+// 获取总的估算总值
+func (m Manger) AmountGuessGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
 		amount += found.GuestAmountGetter()
@@ -129,7 +134,8 @@ func (m Manger) GuestAmountGetter() float64 {
 	return amount
 }
 
-func (m Manger) FinalAmountGetter() float64 {
+// 获取最新的总值
+func (m Manger) AmountLatestGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
 		amount += found.FinalAmountGetter()
@@ -137,7 +143,8 @@ func (m Manger) FinalAmountGetter() float64 {
 	return amount
 }
 
-func (m Manger) LocalBuyAmountGetter() float64 {
+// 获取总投入
+func (m Manger) AmountBuyGetter() float64 {
 	var amount float64
 	for _, found := range m.Founds {
 		amount += found.LocalBuyAmountGetter()
@@ -145,6 +152,7 @@ func (m Manger) LocalBuyAmountGetter() float64 {
 	return amount
 }
 
+//展示文本
 func (m Manger) String() string {
 	var raw string
 
