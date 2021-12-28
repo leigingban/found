@@ -149,7 +149,7 @@ func (f *Found) Notice() string {
 		return f.notice
 	}
 	rateLost := (f.PriceBoughtGetter() - f.PriceGuess) / f.PriceBoughtGetter()
-	if rateLost < 3/100 {
+	if rateLost < RateToFix/100 {
 		return ""
 	}
 	return fmt.Sprintf(" |-*建议: 购入(%.2f)以控制在[%.f%%]\n", f.MoneyToMatchBottom(), RateToFix)
