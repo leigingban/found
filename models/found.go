@@ -7,13 +7,13 @@ import (
 	"github.com/leigingban/found/TTSpider"
 )
 
-const BuyPercent uint = 3
+const RateToFix float64 = 3
 
 type Found struct {
 	Fundcode     string     // 基金代号
 	Name         string     // 基金名称
 	DateLatest   *time.Time // 更新(最新)日期
-	PriceBuy     float64    // 买入净值
+	PriceBought  float64    // 买入净值
 	PriceLatest  float64    // 最新净值
 	PriceGuess   float64    // 估算净值
 	RateLatest   float64    // 最新涨幅
@@ -25,6 +25,7 @@ type Found struct {
 	Records      []*Record  // 购买记录
 	lowestPoint  *Record    // 买入最低点
 	Remark       string     // 备注
+	notice       string     // 提醒
 }
 
 // CreateFound 创建一个Found
@@ -129,9 +130,39 @@ func (f *Found) AddRecord(price string, count string, date string) {
 	f.Records = append(f.Records, record)
 }
 
+func (f *Found) PriceBoughtGetter() float64 {
+	if f.PriceBought != 0 {
+		return f.PriceBought
+	}
+	f.PriceBought = f.AmountBoughtGetter() / f.Count
+	return f.PriceBought
+}
+
 // iDisEqual 根据id判断Found,用于辅助查询Found
 func (f *Found) iDisEqual(fundCode string) bool {
 	return f.Fundcode == fundCode
+}
+
+// Notice 对此基金的提示
+func (f *Found) Notice() string {
+	if f.notice != "" {
+		return f.notice
+	}
+	rateLost := (f.PriceBoughtGetter() - f.PriceGuess) / f.PriceBoughtGetter()
+	if rateLost < 3/100 {
+		return ""
+	}
+	return fmt.Sprintf(" |-*建议: 购入(%.2f)以控制在[%.f%%]\n", f.MoneyToMatchBottom(), RateToFix)
+
+}
+
+// MoneyToMatchBottom 计算保底金额
+func (f *Found) MoneyToMatchBottom() float64 {
+	var money float64
+	moneyLost := (f.PriceBoughtGetter() - f.PriceGuess) * f.CountGetter()
+	totalAmount := 100 * moneyLost / RateToFix
+	money = totalAmount - f.AmountBoughtGetter()
+	return money
 }
 
 //展示文本
@@ -145,5 +176,6 @@ func (f Found) String() string {
 	raw += fmt.Sprintf(" |- 预涨: %.2f%%\n", f.RateGuess)
 	raw += fmt.Sprintf(" |- 总涨: %.2f%%\n", (f.AmountLatestGetter()/f.AmountBoughtGetter()-1)*100)
 	raw += fmt.Sprintf(" |- 备注: %s\n", f.Remark)
+	raw += f.Notice()
 	return raw
 }
