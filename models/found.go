@@ -26,6 +26,7 @@ type Found struct {
 	lowestPoint  *Record    // 买入最低点
 	Remark       string     // 备注
 	notice       string     // 提醒
+	Stocks       []*Stock
 }
 
 // CreateFound 创建一个Found
@@ -163,6 +164,10 @@ func (f *Found) MoneyToMatchBottom() float64 {
 	totalAmount := 100 * moneyLost / RateToFix
 	money = totalAmount - f.AmountBoughtGetter()
 	return money
+}
+
+func (f *Found) AddStock(stock *Stock) {
+	f.Stocks = append(f.Stocks, stock)
 }
 
 //展示文本
