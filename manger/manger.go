@@ -18,16 +18,13 @@ type Manger struct {
 
 // Init 初始化一个manger
 func (m *Manger) Init() *Manger {
+	// 配置其下属性
 	m.Founds = make(map[string]*models.Found)
 	m.Stocks = make(map[string]*models.Stock)
 
+	// 载入本地数据
 	m.dataFromCSV()
 	return m
-}
-
-// LoadDataLocal 载入本地数据
-func (m *Manger) LoadDataLocal() {
-
 }
 
 // UpdateFundsFromWeb 更新基金
