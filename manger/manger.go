@@ -39,6 +39,26 @@ func (m *Manger) UpdateFundsFromWeb() {
 	}
 }
 
+// AnalyseFundStocks 分析基金的股票含量
+func (m *Manger) AnalyseFundStocks() {
+	// 循环遍历本地基金
+	for foundId, found := range m.Founds {
+		rawStocks := TTSpider.GetFundStocksByFundId(foundId)
+		// 循环遍历获取到的数据
+		for _, rawStock := range rawStocks {
+			// 尝试在本地获取对应的股票
+			stock, ok := m.Stocks[rawStock.GPDM]
+			// 如果不存在则进行创建
+			if !ok {
+				stock = m.NewStockFromRawPtr(&rawStock)
+				m.Stocks[rawStock.GPDM] = stock
+			}
+			stock.AddFund(found)
+			found.AddStock(stock)
+		}
+	}
+}
+
 // ShowInfo 展现数据
 func (m *Manger) ShowInfo() {
 	fmt.Println(m)
