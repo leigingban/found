@@ -7,6 +7,7 @@ import (
 	"github.com/liushuochen/gotable"
 	"log"
 	"sort"
+	"strconv"
 )
 
 //默认文件路径
@@ -59,9 +60,36 @@ func (m *Manger) AnalyseFundStocks() {
 			found.AddStock(stock)
 		}
 	}
-	for _, found := range m.Founds {
-		found.Analyse()
+
+	table, _ := gotable.Create("代号", "名称", "类型")
+	table.Align("名称", gotable.Left)
+	table.Align("类型", gotable.Left)
+	var fIndex []string
+	for key := range m.Founds {
+		fIndex = append(fIndex, key)
 	}
+	sort.Strings(fIndex)
+	for _, key := range fIndex {
+		fund := m.Founds[key]
+		table.AddRow([]string{key, fund.Name, fund.Tags()})
+	}
+	fmt.Println(table)
+
+	table2, _ := gotable.Create("代号", "名称", "基金数", "类型", "基金")
+	table2.Align("名称", gotable.Left)
+	table2.Align("类型", gotable.Left)
+	table2.Align("基金", gotable.Left)
+	var sIndex []string
+	for key := range m.Stocks {
+		sIndex = append(sIndex, key)
+	}
+	sort.Strings(sIndex)
+	for _, key := range sIndex {
+		stock := m.Stocks[key]
+		table2.AddRow([]string{key, stock.Name, strconv.Itoa(len(stock.InFunds)), stock.Type, stock.FundNameList()})
+	}
+	fmt.Println(table2)
+
 }
 
 // ShowInfo 展现数据
@@ -75,6 +103,7 @@ func (m *Manger) ShowInfo() {
 	table.Align("最新增量", 2)
 	table.Align("预计涨幅", 2)
 	table.Align("预计增量", 2)
+	//table.CloseBorder()
 
 	if err != nil {
 		fmt.Println("Create table failed: ", err.Error())

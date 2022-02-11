@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/bluele/gcache"
 	"github.com/leigingban/found/TTSpider"
-	"github.com/liushuochen/gotable"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,7 @@ func CreateFound(foundCode string) *Found {
 	found.Records = []*Record{}
 	found.lowestPoint = &Record{}
 	found.gc = gcache.New(20).LRU().Build()
+	found.stockTags = make(map[string]bool)
 	return found
 }
 
@@ -34,6 +36,7 @@ type Found struct {
 	notice      string     // 提醒
 	Stocks      []*Stock
 	gc          gcache.Cache
+	stockTags   map[string]bool
 }
 
 // UpdateFromData 从网上更新自身信息
@@ -205,6 +208,25 @@ func (f *Found) GuestRaisedGetter() float64 {
 
 func (f *Found) AddStock(stock *Stock) {
 	f.Stocks = append(f.Stocks, stock)
+	// 将tag作为key用作存储
+	f.stockTags[stock.Type] = true
+}
+
+func (f *Found) Tags() string {
+	var tags []string
+	for tag := range f.stockTags {
+		tags = append(tags, tag)
+	}
+	sort.Strings(tags)
+	raw := strings.Builder{}
+	l := len(tags)
+	for i := 0; i < l; i++ {
+		raw.WriteString(tags[i])
+		if i < l-1 {
+			raw.WriteString(" * ")
+		}
+	}
+	return raw.String()
 }
 
 // AmountBoughtStringGetter 总投入
@@ -231,18 +253,4 @@ func (f *Found) GuestRaisedStringGetter() string {
 // GuestRaisedPercentStringGetter 预计涨幅
 func (f *Found) GuestRaisedPercentStringGetter() string {
 	return fmt.Sprintf("%.2f%%", f.RateGuess)
-}
-
-func (f Found) Analyse() {
-	fmt.Println(f.Name)
-	table, err := gotable.Create("name", "type")
-	if err != nil {
-		fmt.Println("Create table failed: ", err.Error())
-		return
-	}
-
-	for _, stock := range f.Stocks {
-		table.AddRow([]string{stock.Name, stock.Type})
-	}
-	fmt.Println(table)
 }
