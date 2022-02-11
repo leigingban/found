@@ -66,10 +66,11 @@ func (m *Manger) AnalyseFundStocks() {
 
 // ShowInfo 展现数据
 func (m *Manger) ShowInfo() {
-	table, err := gotable.Create("代号", "名称", "总投入", "最新净值", "最新增量", "预计涨幅", "预计增量")
+	//table, err := gotable.Create("代号", "名称", "总投入", "最新净值", "最新增量", "预计涨幅", "预计增量")
+	table, err := gotable.Create("代号", "名称", "最新净值", "最新增量", "预计涨幅", "预计增量")
 	// 0: 居中 1: 左 2:右
 	table.Align("名称", 1)
-	table.Align("总投入", 2)
+	//table.Align("总投入", 2)
 	table.Align("最新净值", 2)
 	table.Align("最新增量", 2)
 	table.Align("预计涨幅", 2)
@@ -86,7 +87,7 @@ func (m *Manger) ShowInfo() {
 	}
 	sort.Strings(fundIds)
 
-	var AmountBought float64
+	//var AmountBought float64
 	var AmountLatest float64
 	var AmountRaised float64
 	var GuestRaised float64
@@ -96,13 +97,13 @@ func (m *Manger) ShowInfo() {
 		table.AddRow([]string{
 			fund.Fundcode,
 			fund.Name,
-			fund.AmountBoughtStringGetter(),
+			//fund.AmountBoughtStringGetter(),
 			fund.AmountLatestStringGetter(),
 			fund.AmountRaisedStringGetter(),
 			fund.GuestRaisedPercentStringGetter(),
 			fund.GuestRaisedStringGetter(),
 		})
-		AmountBought += fund.AmountBoughtGetter()
+		//AmountBought += fund.AmountBoughtGetter()
 		AmountLatest += fund.AmountLatestGetter()
 		AmountRaised += fund.AmountRaisedGetter()
 		GuestRaised += fund.GuestRaisedGetter()
@@ -112,7 +113,7 @@ func (m *Manger) ShowInfo() {
 	table.AddRow([]string{
 		"******",
 		"合计",
-		fmt.Sprintf("%.2f", AmountBought),
+		//fmt.Sprintf("%.2f", AmountBought),
 		fmt.Sprintf("%.2f", AmountLatest),
 		fmt.Sprintf("%.2f", AmountRaised),
 		fmt.Sprintf("%.2f%%", GuestRaised/AmountLatest*100),
@@ -120,18 +121,3 @@ func (m *Manger) ShowInfo() {
 	})
 	fmt.Println(table)
 }
-
-////展示文本
-//func (m Manger) String() string {
-//	var raw string
-//
-//	raw += fmt.Sprintf("明细:\n")
-//	raw += fmt.Sprintf("*总投: %.2f \n", m.AmountBoughtGetter())
-//	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.AmountGuessGetter(), m.AmountGuessGetter()-m.AmountBoughtGetter())
-//	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.AmountLatestGetter(), m.AmountLatestGetter()-m.AmountBoughtGetter())
-//
-//	for _, found := range m.Founds {
-//		raw += found.String()
-//	}
-//	return raw
-//}
