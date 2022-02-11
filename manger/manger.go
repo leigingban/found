@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/leigingban/found/TTSpider"
 	"github.com/leigingban/found/models"
+	"github.com/liushuochen/gotable"
 	"log"
+	"sort"
 )
 
 //默认文件路径
@@ -57,24 +59,79 @@ func (m *Manger) AnalyseFundStocks() {
 			found.AddStock(stock)
 		}
 	}
+	for _, found := range m.Founds {
+		found.Analyse()
+	}
 }
 
 // ShowInfo 展现数据
 func (m *Manger) ShowInfo() {
-	fmt.Println(m)
-}
+	table, err := gotable.Create("代号", "名称", "总投入", "最新净值", "最新增量", "预计涨幅", "预计增量")
+	// 0: 居中 1: 左 2:右
+	table.Align("名称", 1)
+	table.Align("总投入", 2)
+	table.Align("最新净值", 2)
+	table.Align("最新增量", 2)
+	table.Align("预计涨幅", 2)
+	table.Align("预计增量", 2)
 
-//展示文本
-func (m Manger) String() string {
-	var raw string
-
-	raw += fmt.Sprintf("明细:\n")
-	raw += fmt.Sprintf("*总投: %.2f \n", m.AmountBoughtGetter())
-	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.AmountGuessGetter(), m.AmountGuessGetter()-m.AmountBoughtGetter())
-	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.AmountLatestGetter(), m.AmountLatestGetter()-m.AmountBoughtGetter())
-
-	for _, found := range m.Founds {
-		raw += found.String()
+	if err != nil {
+		fmt.Println("Create table failed: ", err.Error())
+		return
 	}
-	return raw
+	// 只是用于排序
+	var fundIds []string
+	for s := range m.Founds {
+		fundIds = append(fundIds, s)
+	}
+	sort.Strings(fundIds)
+
+	var AmountBought float64
+	var AmountLatest float64
+	var AmountRaised float64
+	var GuestRaised float64
+
+	for _, id := range fundIds {
+		fund := m.Founds[id]
+		table.AddRow([]string{
+			fund.Fundcode,
+			fund.Name,
+			fund.AmountBoughtStringGetter(),
+			fund.AmountLatestStringGetter(),
+			fund.AmountRaisedStringGetter(),
+			fund.GuestRaisedPercentStringGetter(),
+			fund.GuestRaisedStringGetter(),
+		})
+		AmountBought += fund.AmountBoughtGetter()
+		AmountLatest += fund.AmountLatestGetter()
+		AmountRaised += fund.AmountRaisedGetter()
+		GuestRaised += fund.GuestRaisedGetter()
+
+	}
+
+	table.AddRow([]string{
+		"******",
+		"合计",
+		fmt.Sprintf("%.2f", AmountBought),
+		fmt.Sprintf("%.2f", AmountLatest),
+		fmt.Sprintf("%.2f", AmountRaised),
+		fmt.Sprintf("%.2f%%", GuestRaised/AmountLatest*100),
+		fmt.Sprintf("%.2f", GuestRaised),
+	})
+	fmt.Println(table)
 }
+
+////展示文本
+//func (m Manger) String() string {
+//	var raw string
+//
+//	raw += fmt.Sprintf("明细:\n")
+//	raw += fmt.Sprintf("*总投: %.2f \n", m.AmountBoughtGetter())
+//	raw += fmt.Sprintf("*预计: %.2f (%.2f)\n", m.AmountGuessGetter(), m.AmountGuessGetter()-m.AmountBoughtGetter())
+//	raw += fmt.Sprintf("*净值: %.2f (%.2f)\n", m.AmountLatestGetter(), m.AmountLatestGetter()-m.AmountBoughtGetter())
+//
+//	for _, found := range m.Founds {
+//		raw += found.String()
+//	}
+//	return raw
+//}

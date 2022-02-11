@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"github.com/leigingban/found/models"
+	"github.com/leigingban/found/manger"
 )
 
 func main() {
-	manger := models.CreateManger()
-	manger.LoadFromCSV()
-	manger.UpToDate()
-	fmt.Println(manger)
-	fmt.Println(manger)
+	fundManger := new(manger.Manger).Init()
+	fundManger.UpdateFundsFromWeb()
+	fundManger.ShowInfo()
+	//fundManger.AnalyseFundStocks()
 }

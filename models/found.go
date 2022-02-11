@@ -2,32 +2,13 @@ package models
 
 import (
 	"fmt"
-	"time"
-
+	"github.com/bluele/gcache"
 	"github.com/leigingban/found/TTSpider"
+	"github.com/liushuochen/gotable"
+	"time"
 )
 
 const RateToFix float64 = 3
-
-type Found struct {
-	Fundcode     string     // 基金代号
-	Name         string     // 基金名称
-	DateLatest   *time.Time // 更新(最新)日期
-	PriceBought  float64    // 买入净值
-	PriceLatest  float64    // 最新净值
-	PriceGuess   float64    // 估算净值
-	RateLatest   float64    // 最新涨幅
-	RateGuess    float64    // 估算涨幅
-	AmountBought float64    // 买入总值
-	AmountLatest float64    // 最新总值
-	AmountGuess  float64    // 估算总值
-	Count        float64    // 买入数量,份额
-	Records      []*Record  // 购买记录
-	lowestPoint  *Record    // 买入最低点
-	Remark       string     // 备注
-	notice       string     // 提醒
-	Stocks       []*Stock
-}
 
 // CreateFound 创建一个Found
 func CreateFound(foundCode string) *Found {
@@ -35,7 +16,51 @@ func CreateFound(foundCode string) *Found {
 	found.Fundcode = foundCode
 	found.Records = []*Record{}
 	found.lowestPoint = &Record{}
+	found.gc = gcache.New(20).LRU().Build()
 	return found
+}
+
+type Found struct {
+	Fundcode    string     // 基金代号
+	Name        string     // 基金名称
+	DateLatest  *time.Time // 更新(最新)日期
+	PriceLatest float64    // 最新净值 **
+	PriceGuess  float64    // 估算净值 **
+	RateLatest  float64    // 最新涨幅 **
+	RateGuess   float64    // 估算涨幅 **
+	Records     []*Record  // 购买记录
+	lowestPoint *Record    // 买入最低点
+	Remark      string     // 备注
+	notice      string     // 提醒
+	Stocks      []*Stock
+	gc          gcache.Cache
+}
+
+// UpdateFromData 从网上更新自身信息
+func (f *Found) UpdateFromData(data TTSpider.Data) {
+	f.Name = data.SHORTNAME
+	f.RateGuess = data.GSZZL
+	f.PriceGuess = data.GSZ
+	f.RateLatest = data.NAVCHGRT
+	f.PriceLatest = data.NAV //data.NAV
+}
+
+// AddRecord 加入购买记录
+func (f *Found) AddRecord(price string, count string, date string) {
+	// 添加时将计算好的缓存重设
+	record := CreateRecord(price, count, date)
+
+	// 对record进行检查，如果为空，则跳过
+	if record == nil {
+		return
+	}
+
+	f.Records = append(f.Records, record)
+}
+
+// iDisEqual 根据id判断Found,用于辅助查询Found
+func (f *Found) iDisEqual(fundCode string) bool {
+	return f.Fundcode == fundCode
 }
 
 // GetLowestPoint 计算购入的最低点用于后续运算比对
@@ -58,129 +83,166 @@ func (f *Found) GetLowestPoint() *Record {
 
 // AmountBoughtGetter 获取总额
 func (f *Found) AmountBoughtGetter() float64 {
-	// 如果有缓存直接返回
-	if f.AmountBought != 0 {
-		return f.AmountBought
+	key := "amount"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
-	// 累计金额
+
 	var amount float64
 	for _, record := range f.Records {
 		amount += record.LocalBuyAmountGetter()
 	}
-	f.AmountBought = amount
+	f.gc.Set(key, amount)
 	return amount
 }
 
 // CountGetter 获取总得份额
 func (f *Found) CountGetter() float64 {
-	// 如果有缓存直接返回
-	if f.Count != 0 {
-		return f.Count
+
+	key := "countAmount"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
 	// 累计份额
 	var count float64
 	for _, record := range f.Records {
 		count += record.Count
 	}
-	f.Count = count
+	f.gc.Set(key, count)
 	return count
-}
-
-// UpdateFromData 从网上更新自身信息
-func (f *Found) UpdateFromData(data TTSpider.Data) {
-	f.Name = data.SHORTNAME
-	f.RateGuess = data.GSZZL
-	f.PriceGuess = data.GSZ
-	f.RateLatest = data.NAVCHGRT
-	f.PriceLatest = data.NAV //data.NAV
 }
 
 // AmountGuessGetter 获取估算总值
 func (f *Found) AmountGuessGetter() float64 {
-	if f.AmountGuess != 0 {
-		return f.AmountGuess
+	key := "amountGuest"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
-	f.AmountGuess = f.CountGetter() * f.PriceGuess
-	return f.AmountGuess
+	amountGuess := f.CountGetter() * f.PriceGuess
+	f.gc.Set(key, amountGuess)
+	return amountGuess
 }
 
 // AmountLatestGetter 获取最新总值
 func (f *Found) AmountLatestGetter() float64 {
-	if f.AmountLatest != 0 {
-		return f.AmountLatest
-	}
-	f.AmountLatest = f.CountGetter() * f.PriceLatest
-	return f.AmountLatest
-}
-
-// AddRecord 加入购买记录
-func (f *Found) AddRecord(price string, count string, date string) {
-	// 添加时将计算好的缓存重设
-	f.AmountBought = 0
-	f.AmountGuess = 0
-	f.AmountLatest = 0
-	f.Count = 0
-
-	record := CreateRecord(price, count, date)
-
-	// 对record进行检查，如果为空，则跳过
-	if record == nil {
-		return
+	key := "amountLatest"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
 
-	f.Records = append(f.Records, record)
+	amountLatest := f.CountGetter() * f.PriceLatest
+	f.gc.Set(key, amountLatest)
+	return amountLatest
 }
 
 func (f *Found) PriceBoughtGetter() float64 {
-	if f.PriceBought != 0 {
-		return f.PriceBought
+
+	key := "priceBought"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
-	f.PriceBought = f.AmountBoughtGetter() / f.Count
-	return f.PriceBought
+
+	priceBought := f.AmountBoughtGetter() / f.CountGetter()
+	f.gc.Set(key, priceBought)
+	return priceBought
 }
 
-// iDisEqual 根据id判断Found,用于辅助查询Found
-func (f *Found) iDisEqual(fundCode string) bool {
-	return f.Fundcode == fundCode
-}
+// AmountRaisedGetter 最新增量
+func (f *Found) AmountRaisedGetter() float64 {
 
-// Notice 对此基金的提示
-func (f *Found) Notice() string {
-	if f.notice != "" {
-		return f.notice
+	key := "amountRaised"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
-	rateLost := (f.PriceBoughtGetter() - f.PriceGuess) / f.PriceBoughtGetter()
-	if rateLost < RateToFix/100 {
-		return ""
+
+	amountRaised := f.AmountLatestGetter() - f.AmountBoughtGetter()
+	f.gc.Set(key, amountRaised)
+	return amountRaised
+}
+
+// GuestRaisedGetter 预计增量
+func (f *Found) GuestRaisedGetter() float64 {
+
+	key := "guestRaised"
+	out, err := f.gc.Get(key)
+	if err == nil {
+		return out.(float64)
 	}
-	return fmt.Sprintf(" |-*建议: 购入(%.2f)以控制在[%.f%%]\n", f.MoneyToMatchBottom(), RateToFix)
 
+	//f.CountGetter()*f.PriceGuess-f.AmountLatestGetter()
+	guestRaised := f.CountGetter() * (f.PriceGuess - f.PriceLatest)
+	f.gc.Set(key, guestRaised)
+	return guestRaised
 }
 
-// MoneyToMatchBottom 计算保底金额
-func (f *Found) MoneyToMatchBottom() float64 {
-	var money float64
-	moneyLost := (f.PriceBoughtGetter() - f.PriceGuess) * f.CountGetter()
-	totalAmount := 100 * moneyLost / RateToFix
-	money = totalAmount - f.AmountBoughtGetter()
-	return money
-}
+//// Notice 对此基金的提示
+//func (f *Found) Notice() string {
+//	if f.notice != "" {
+//		return f.notice
+//	}
+//	rateLost := (f.PriceBoughtGetter() - f.PriceGuess) / f.PriceBoughtGetter()
+//	if rateLost < RateToFix/100 {
+//		return ""
+//	}
+//	return fmt.Sprintf(" |-*建议: 购入(%.2f)以控制在[%.f%%]\n", f.MoneyToMatchBottom(), RateToFix)
+//
+//}
+//
+//// MoneyToMatchBottom 计算保底金额
+//func (f *Found) MoneyToMatchBottom() float64 {
+//	var money float64
+//	moneyLost := (f.PriceBoughtGetter() - f.PriceGuess) * f.CountGetter()
+//	totalAmount := 100 * moneyLost / RateToFix
+//	money = totalAmount - f.AmountBoughtGetter()
+//	return money
+//}
 
 func (f *Found) AddStock(stock *Stock) {
 	f.Stocks = append(f.Stocks, stock)
 }
 
-//展示文本
-func (f Found) String() string {
-	var raw string
-	raw += fmt.Sprintf("--- %s ---\n", f.Name)
-	raw += fmt.Sprintf(" |- 代号: %s\n", f.Fundcode)
-	raw += fmt.Sprintf(" |- 份额: %.2f\n", f.CountGetter())
-	raw += fmt.Sprintf(" |- 预计: %.2f (%.2f)\n", f.AmountGuessGetter(), f.AmountGuessGetter()-f.AmountBoughtGetter())
-	raw += fmt.Sprintf(" |- 净值: %.2f (%.2f)\n", f.AmountLatestGetter(), f.AmountLatestGetter()-f.AmountBoughtGetter())
-	raw += fmt.Sprintf(" |- 预涨: %.2f%%\n", f.RateGuess)
-	raw += fmt.Sprintf(" |- 总涨: %.2f%%\n", (f.AmountLatestGetter()/f.AmountBoughtGetter()-1)*100)
-	raw += fmt.Sprintf(" |- 备注: %s\n", f.Remark)
-	raw += f.Notice()
-	return raw
+// AmountBoughtStringGetter 总投入
+func (f *Found) AmountBoughtStringGetter() string {
+	return fmt.Sprintf("%.2f", f.AmountBoughtGetter())
+}
+
+// AmountLatestStringGetter 最新净值
+func (f *Found) AmountLatestStringGetter() string {
+	return fmt.Sprintf("%.2f", f.AmountLatestGetter())
+}
+
+// AmountRaisedStringGetter 最新增量
+func (f *Found) AmountRaisedStringGetter() string {
+	return fmt.Sprintf("%.2f", f.AmountRaisedGetter())
+}
+
+// GuestRaisedStringGetter 预计增量
+func (f *Found) GuestRaisedStringGetter() string {
+	//return fmt.Sprintf("%.2f", f.CountGetter()*f.PriceGuess-f.AmountLatestGetter())
+	return fmt.Sprintf("%.2f", f.GuestRaisedGetter())
+}
+
+// GuestRaisedPercentStringGetter 预计涨幅
+func (f *Found) GuestRaisedPercentStringGetter() string {
+	return fmt.Sprintf("%.2f%%", f.RateGuess)
+}
+
+func (f Found) Analyse() {
+	fmt.Println(f.Name)
+	table, err := gotable.Create("name", "type")
+	if err != nil {
+		fmt.Println("Create table failed: ", err.Error())
+		return
+	}
+
+	for _, stock := range f.Stocks {
+		table.AddRow([]string{stock.Name, stock.Type})
+	}
+	fmt.Println(table)
 }
