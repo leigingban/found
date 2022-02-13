@@ -8,5 +8,5 @@ func main() {
 	fundManger := new(manger.Manger).Init()
 	fundManger.UpdateFundsFromWeb()
 	fundManger.ShowInfo()
-	fundManger.AnalyseFundStocks()
+	//fundManger.AnalyseFundStocks()
 }
