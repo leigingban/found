@@ -2,12 +2,13 @@ package manger
 
 import (
 	"fmt"
-	"github.com/leigingban/found/TTSpider"
-	"github.com/leigingban/found/models"
-	"github.com/liushuochen/gotable"
 	"log"
 	"sort"
 	"strconv"
+
+	"github.com/leigingban/found/TTSpider"
+	"github.com/leigingban/found/models"
+	"github.com/liushuochen/gotable"
 )
 
 //默认文件路径
@@ -60,7 +61,6 @@ func (m *Manger) AnalyseFundStocks() {
 			found.AddStock(stock)
 		}
 	}
-
 	table, _ := gotable.Create("代号", "名称", "类型")
 	table.Align("名称", gotable.Left)
 	table.Align("类型", gotable.Left)
@@ -94,6 +94,7 @@ func (m *Manger) AnalyseFundStocks() {
 
 // ShowInfo 展现数据
 func (m *Manger) ShowInfo() {
+	// TODO 将代码解耦,排序交给打印的时候操作,已减少后面调整时的代码量
 	//table, err := gotable.Create("代号", "名称", "总投入", "最新净值", "最新增量", "预计涨幅", "预计增量")
 	table, err := gotable.Create("代号", "名称", "最新净值", "最新增量", "预计涨幅", "预计增量")
 	// 0: 居中 1: 左 2:右
