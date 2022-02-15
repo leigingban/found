@@ -122,6 +122,7 @@ func (m *Manger) ShowInfo() {
 	var AmountLatest float64
 	var AmountRaised float64
 	var GuestRaised float64
+	var todayRaise float64
 
 	for _, id := range fundIds {
 		fund := m.Founds[id]
@@ -129,15 +130,18 @@ func (m *Manger) ShowInfo() {
 			fund.Fundcode,
 			fund.Name,
 			//fund.AmountBoughtStringGetter(),
-			fund.AmountLatestStringGetter(),
-			fund.AmountRaisedStringGetter(),
-			fund.GuestRaisedPercentStringGetter(),
-			fund.GuestRaisedStringGetter(),
+			fund.AmountLatestStringGetter(),       // 最新净值
+			fund.AmountRaisedStringGetter(),       // 最新增量
+			fund.GuestRaisedPercentStringGetter(), // 预计涨幅
+			fund.GuestRaisedStringGetter(),        // 预计增量
 		})
 		//AmountBought += fund.AmountBoughtGetter()
 		AmountLatest += fund.AmountLatestGetter()
 		AmountRaised += fund.AmountRaisedGetter()
 		GuestRaised += fund.GuestRaisedGetter()
+		if fund.LatestIsToday {
+			todayRaise += fund.CalcTodayRaise()
+		}
 
 	}
 
@@ -149,6 +153,14 @@ func (m *Manger) ShowInfo() {
 		fmt.Sprintf("%.2f", AmountRaised),
 		fmt.Sprintf("%.2f%%", GuestRaised/AmountLatest*100),
 		fmt.Sprintf("%.2f", GuestRaised),
+	})
+	table.AddRow([]string{
+		"",
+		"",
+		"",
+		"",
+		"",
+		fmt.Sprintf("(%.2f)", todayRaise),
 	})
 	fmt.Println(table)
 }

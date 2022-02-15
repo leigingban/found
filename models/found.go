@@ -60,7 +60,7 @@ type Found struct {
 	lowestPoint   *Record    // 买入最低点
 	Remark        string     // 备注
 	notice        string     // 提醒
-	latestIsToday bool       // 最新净值是今天的？
+	LatestIsToday bool       // 最新净值是今天的？
 	Stocks        []*Stock
 	gc            gcache.Cache
 	stockTags     map[string]bool
@@ -74,7 +74,7 @@ func (f *Found) UpdateFromData(data TTSpider.Data) {
 	f.RateLatest = data.NAVCHGRT
 	f.PriceLatest = data.NAV //data.NAV
 	// 加入判断最新净值是否今天已更新
-	f.latestIsToday = isToday(data.PDATE)
+	f.LatestIsToday = isToday(data.PDATE)
 }
 
 // AddRecord 加入购买记录
@@ -273,13 +273,30 @@ func (f *Found) AmountRaisedStringGetter() string {
 	return fmt.Sprintf("%.2f", f.AmountRaisedGetter())
 }
 
+// CalcTodayRaise 净值当天，反推算出今天的增量 (因为现在只有最新净值，最新涨幅，没其他资料)
+func (f *Found) CalcTodayRaise() float64 {
+	amount := f.AmountLatestGetter()
+	correctRate := f.RateLatest / 100
+	return amount * correctRate / (correctRate + 1)
+}
+
 // GuestRaisedStringGetter 预计增量
 func (f *Found) GuestRaisedStringGetter() string {
 	//return fmt.Sprintf("%.2f", f.CountGetter()*f.PriceGuess-f.AmountLatestGetter())
+
+	// 如果最新净值是今天的，预计涨幅已经无意义了
+	if f.LatestIsToday {
+		// Y = count * PriceLatest /  (RateLatest + 1)
+		return fmt.Sprintf("(%.2f)", f.CalcTodayRaise())
+	}
 	return fmt.Sprintf("%.2f", f.GuestRaisedGetter())
 }
 
 // GuestRaisedPercentStringGetter 预计涨幅
 func (f *Found) GuestRaisedPercentStringGetter() string {
+	// 如果最新净值是今天的，预计涨幅已经无意义了
+	if f.LatestIsToday {
+		return fmt.Sprintf("(%.2f%%)", f.RateLatest)
+	}
 	return fmt.Sprintf("%.2f%%", f.RateGuess)
 }
