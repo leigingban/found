@@ -22,21 +22,35 @@ func CreateFound(foundCode string) *Found {
 	return found
 }
 
+func isToday(dataString string) bool {
+	Input, err := time.ParseInLocation("2006-01-02", dataString, Shanghai)
+	if err != nil {
+
+		return false
+	}
+	today := time.Now()
+	y1, m1, d1 := Input.Date()
+	y2, m2, d2 := today.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
+
+}
+
 type Found struct {
-	Fundcode    string     // 基金代号
-	Name        string     // 基金名称
-	DateLatest  *time.Time // 更新(最新)日期
-	PriceLatest float64    // 最新净值 **
-	PriceGuess  float64    // 估算净值 **
-	RateLatest  float64    // 最新涨幅 **
-	RateGuess   float64    // 估算涨幅 **
-	Records     []*Record  // 购买记录
-	lowestPoint *Record    // 买入最低点
-	Remark      string     // 备注
-	notice      string     // 提醒
-	Stocks      []*Stock
-	gc          gcache.Cache
-	stockTags   map[string]bool
+	Fundcode      string     // 基金代号
+	Name          string     // 基金名称
+	DateLatest    *time.Time // 更新(最新)日期
+	PriceLatest   float64    // 最新净值 **
+	PriceGuess    float64    // 估算净值 **
+	RateLatest    float64    // 最新涨幅 **
+	RateGuess     float64    // 估算涨幅 **
+	Records       []*Record  // 购买记录
+	lowestPoint   *Record    // 买入最低点
+	Remark        string     // 备注
+	notice        string     // 提醒
+	latestIsToday bool       // 最新净值是今天的？
+	Stocks        []*Stock
+	gc            gcache.Cache
+	stockTags     map[string]bool
 }
 
 // UpdateFromData 从网上更新自身信息
@@ -46,6 +60,8 @@ func (f *Found) UpdateFromData(data TTSpider.Data) {
 	f.PriceGuess = data.GSZ
 	f.RateLatest = data.NAVCHGRT
 	f.PriceLatest = data.NAV //data.NAV
+	// 加入判断最新净值是否今天已更新
+	f.latestIsToday = isToday(data.PDATE)
 }
 
 // AddRecord 加入购买记录

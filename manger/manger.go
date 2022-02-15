@@ -33,6 +33,7 @@ func (m *Manger) Init() *Manger {
 
 // UpdateFundsFromWeb 更新基金
 func (m *Manger) UpdateFundsFromWeb() {
+	// 返回的一个数据中包含多个基金的资料
 	dataList, err := TTSpider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
 	if err != nil {
 		log.Println("从网络更新数据时发生错误: ", err)
