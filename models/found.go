@@ -11,6 +11,18 @@ import (
 
 const RateToFix float64 = 3
 
+/*
+var NowYear int
+var NowMonth time.Month
+*/
+
+var NowDay int
+
+func init() {
+	//NowYear, NowMonth, NowDay = time.Now().Date()
+	_, _, NowDay = time.Now().Date()
+}
+
 // CreateFound 创建一个Found
 func CreateFound(foundCode string) *Found {
 	found := &Found{}
@@ -28,10 +40,11 @@ func isToday(dataString string) bool {
 
 		return false
 	}
-	today := time.Now()
-	y1, m1, d1 := Input.Date()
-	y2, m2, d2 := today.Date()
-	return y1 == y2 && m1 == m2 && d1 == d2
+	// 其实比较日就可以了，数据一般在一个月内，不可能出现不同月同日的情况
+	//y1, m1, d1 := Input.Date()
+	_, _, inputDay := Input.Date()
+	//return y1 == NowYear && m1 == NowMonth && d1 == NowDay
+	return inputDay == NowDay
 
 }
 
