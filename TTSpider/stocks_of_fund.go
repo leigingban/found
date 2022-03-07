@@ -1,5 +1,7 @@
 package TTSpider
 
+// 通过基金id获取其下股票的信息
+
 import (
 	"encoding/json"
 	"fmt"
