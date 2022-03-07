@@ -108,14 +108,14 @@ func (m *Manger) PrintStockDetails() {
 func (m *Manger) ShowInfo() {
 	// TODO 将代码解耦,排序交给打印的时候操作,已减少后面调整时的代码量
 	//table, err := gotable.Create("代号", "名称", "总投入", "最新净值", "最新增量", "预计涨幅", "预计增量")
-	table, err := gotable.Create("代号", "名称", "最新净值", "最新增量", "预计涨幅", "预计增量")
+	table, err := gotable.Create("代号", "名称", "总W", "增K", "预幅", "预量")
 	// 0: 居中 1: 左 2:右
-	table.Align("名称", 1)
+	table.Align("名称", gotable.Left)
 	//table.Align("总投入", 2)
-	table.Align("最新净值", 2)
-	table.Align("最新增量", 2)
-	table.Align("预计涨幅", 2)
-	table.Align("预计增量", 2)
+	table.Align("总W", gotable.Right)
+	table.Align("增K", gotable.Right)
+	table.Align("预幅", gotable.Right)
+	table.Align("预量", gotable.Right)
 	//table.CloseBorder()
 
 	if err != nil {
@@ -160,8 +160,8 @@ func (m *Manger) ShowInfo() {
 		"******",
 		"合计",
 		//fmt.Sprintf("%.2f", AmountBought),
-		fmt.Sprintf("%.2f", AmountLatest),
-		fmt.Sprintf("%.2f", AmountRaised),
+		fmt.Sprintf("%.2f", AmountLatest/10000),
+		fmt.Sprintf("%.2f", AmountRaised/1000),
 		fmt.Sprintf("%.2f%%", GuestRaised/AmountLatest*100),
 		fmt.Sprintf("%.2f", GuestRaised),
 	})

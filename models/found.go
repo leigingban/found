@@ -265,12 +265,12 @@ func (f *Found) AmountBoughtStringGetter() string {
 
 // AmountLatestStringGetter 最新净值
 func (f *Found) AmountLatestStringGetter() string {
-	return fmt.Sprintf("%.2f", f.AmountLatestGetter())
+	return fmt.Sprintf("%.2f", f.AmountLatestGetter()/10000)
 }
 
 // AmountRaisedStringGetter 最新增量
 func (f *Found) AmountRaisedStringGetter() string {
-	return fmt.Sprintf("%.2f", f.AmountRaisedGetter())
+	return fmt.Sprintf("%.2f", f.AmountRaisedGetter()/1000)
 }
 
 // CalcTodayRaise 净值当天，反推算出今天的增量 (因为现在只有最新净值，最新涨幅，没其他资料)

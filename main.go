@@ -13,7 +13,7 @@ func main() {
 	fundManger.ShowInfo()
 
 	// 获取并打印股票信息
-	fundManger.FetchStocksForFunds()
-	fundManger.PrintStockDetails()
+	//fundManger.FetchStocksForFunds()
+	//fundManger.PrintStockDetails()
 
 }
