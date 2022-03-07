@@ -2,13 +2,12 @@ package manger
 
 import (
 	"fmt"
-	"log"
-	"sort"
-	"strconv"
-
 	"github.com/leigingban/found/fundspider"
 	"github.com/leigingban/found/models"
 	"github.com/liushuochen/gotable"
+	"log"
+	"sort"
+	"strconv"
 )
 
 //默认文件路径
@@ -31,8 +30,8 @@ func (m *Manger) Init() *Manger {
 	return m
 }
 
-// UpdateFundsFromWeb 更新基金
-func (m *Manger) UpdateFundsFromWeb() {
+// FetchFundsLatestInfoFrom1234567 更新基金
+func (m *Manger) FetchFundsLatestInfoFrom1234567() {
 	// 返回的一个数据中包含多个基金的资料
 	dataList, err := fundspider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
 	if err != nil {
@@ -44,24 +43,36 @@ func (m *Manger) UpdateFundsFromWeb() {
 	}
 }
 
-// AnalyseFundStocks 分析基金的股票含量
-func (m *Manger) AnalyseFundStocks() {
-	// 循环遍历本地基金
+// FetchStocksForFunds 获取基金的股票含量
+func (m *Manger) FetchStocksForFunds() {
+
+	// 遍历本地基金，并从网上获取股票信息
 	for foundId, found := range m.Founds {
+		// 获取当前基金的股票信息
 		rawStocks := fundspider.GetFundStocksByFundId(foundId)
-		// 循环遍历获取到的数据
+		// 遍历获取到的股票，并以键值对形式保存在m.stocks中
 		for _, rawStock := range rawStocks {
-			// 尝试在本地获取对应的股票
+			// m.stocks中都是唯一值，有则忽略，无则添加
 			stock, ok := m.Stocks[rawStock.GPDM]
-			// 如果不存在则进行创建
 			if !ok {
 				stock = m.NewStockFromRawPtr(&rawStock)
 				m.Stocks[rawStock.GPDM] = stock
 			}
+
+			// 双向表，各自将数据存放在自身的列表中
 			stock.AddFund(found)
 			found.AddStock(stock)
 		}
 	}
+
+}
+
+// PrintStockDetails 打印股票信息
+func (m *Manger) PrintStockDetails() {
+	/*  创建打印表格
+	1. 建立表头
+	*/
+
 	table, _ := gotable.Create("代号", "名称", "类型")
 	table.Align("名称", gotable.Left)
 	table.Align("类型", gotable.Left)

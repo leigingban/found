@@ -5,13 +5,15 @@ import (
 )
 
 func main() {
+	// 创建一个基金管家
 	fundManger := new(manger.Manger).Init()
-	fundManger.UpdateFundsFromWeb()
+	// 基金管家从网上获取数据
+	fundManger.FetchFundsLatestInfoFrom1234567()
+	// 打印即时基金信息
 	fundManger.ShowInfo()
-	//fundManger.AnalyseFundStocks()
 
-	// 内存分析
-	// f, _ := os.OpenFile("mem.profile", os.O_CREATE|os.O_RDWR, 0644)
-	// defer f.Close()
-	// pprof.Lookup("heap").WriteTo(f, 0)
+	// 获取并打印股票信息
+	fundManger.FetchStocksForFunds()
+	fundManger.PrintStockDetails()
+
 }
