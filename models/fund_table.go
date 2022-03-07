@@ -20,12 +20,12 @@ func (f *Found) AddRichRow(table *tablewriter.Table) {
 		{},
 		{},
 		{},
-		{tablewriter.FgRedColor},
-		{tablewriter.FgRedColor},
+		{tablewriter.Bold, tablewriter.FgRedColor},
+		{tablewriter.Bold, tablewriter.FgRedColor},
 	}
 	if f.GuestRaisedGetter() < 0 {
-		color[4] = tablewriter.Colors{tablewriter.FgGreenColor}
-		color[5] = tablewriter.Colors{tablewriter.FgGreenColor}
+		color[4] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor}
+		color[5] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor}
 	}
 	table.Rich(row, color)
 }

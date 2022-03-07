@@ -151,20 +151,20 @@ func (m *Manger) SetFooter(table *tablewriter.Table) {
 	table.SetFooter(row)
 
 	color := []tablewriter.Colors{
-		{},
-		{tablewriter.FgRedColor},
-		{},
-		{},
-		{tablewriter.FgRedColor},
-		{tablewriter.FgRedColor},
+		{tablewriter.Bold},
+		{tablewriter.Bold, tablewriter.FgRedColor},
+		{tablewriter.Bold},
+		{tablewriter.Bold},
+		{tablewriter.Bold, tablewriter.FgRedColor},
+		{tablewriter.Bold, tablewriter.FgRedColor},
 	}
 
 	if todayRaise <= 0 {
-		color[1] = tablewriter.Colors{tablewriter.FgGreenColor}
+		color[1] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor}
 	}
 	if GuestRaised <= 0 {
-		color[4] = tablewriter.Colors{tablewriter.FgGreenColor}
-		color[5] = tablewriter.Colors{tablewriter.FgGreenColor}
+		color[4] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor}
+		color[5] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgGreenColor}
 	}
 
 	table.SetFooterColor(color...)
