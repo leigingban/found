@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/bluele/gcache"
-	"github.com/leigingban/found/TTSpider"
+	"github.com/leigingban/found/fundspider"
 	"sort"
 	"strings"
 	"time"
@@ -67,7 +67,7 @@ type Found struct {
 }
 
 // UpdateFromData 从网上更新自身信息
-func (f *Found) UpdateFromData(data TTSpider.Data) {
+func (f *Found) UpdateFromData(data fundspider.Data) {
 	f.Name = data.SHORTNAME
 	f.RateGuess = data.GSZZL
 	f.PriceGuess = data.GSZ

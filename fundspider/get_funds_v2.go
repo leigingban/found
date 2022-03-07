@@ -1,4 +1,4 @@
-package TTSpider
+package fundspider
 
 import (
 	"encoding/json"

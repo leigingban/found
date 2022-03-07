@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/leigingban/found/TTSpider"
+	"github.com/leigingban/found/fundspider"
 	"github.com/leigingban/found/models"
 	"github.com/liushuochen/gotable"
 )
@@ -34,7 +34,7 @@ func (m *Manger) Init() *Manger {
 // UpdateFundsFromWeb 更新基金
 func (m *Manger) UpdateFundsFromWeb() {
 	// 返回的一个数据中包含多个基金的资料
-	dataList, err := TTSpider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
+	dataList, err := fundspider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
 	if err != nil {
 		log.Println("从网络更新数据时发生错误: ", err)
 	}
@@ -48,7 +48,7 @@ func (m *Manger) UpdateFundsFromWeb() {
 func (m *Manger) AnalyseFundStocks() {
 	// 循环遍历本地基金
 	for foundId, found := range m.Founds {
-		rawStocks := TTSpider.GetFundStocksByFundId(foundId)
+		rawStocks := fundspider.GetFundStocksByFundId(foundId)
 		// 循环遍历获取到的数据
 		for _, rawStock := range rawStocks {
 			// 尝试在本地获取对应的股票

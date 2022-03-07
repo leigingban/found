@@ -1,4 +1,4 @@
-package TTSpider
+package fundspider
 
 // 对基金数据的处理
 /*

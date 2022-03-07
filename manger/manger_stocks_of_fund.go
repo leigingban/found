@@ -1,12 +1,12 @@
 package manger
 
 import (
-	"github.com/leigingban/found/TTSpider"
+	"github.com/leigingban/found/fundspider"
 	"github.com/leigingban/found/models"
 )
 
 // NewStockFromRawPtr 创建新Stock
-func (m *Manger) NewStockFromRawPtr(rawStock *TTSpider.RawStock) *models.Stock {
+func (m *Manger) NewStockFromRawPtr(rawStock *fundspider.RawStock) *models.Stock {
 
 	/*
 		GPDM         string `json:"GPDM"`         // 股票代码

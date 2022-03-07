@@ -1,4 +1,4 @@
-package httpSpider
+package basehttpspider
 
 import (
 	"net/http"
