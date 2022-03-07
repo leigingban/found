@@ -160,7 +160,7 @@ func (m *Manger) ShowInfo() {
 		"******",
 		"合计",
 		//fmt.Sprintf("%.2f", AmountBought),
-		fmt.Sprintf("%.2f", AmountLatest/10000),
+		fmt.Sprintf("%.2f", AmountLatest/1000),
 		fmt.Sprintf("%.2f", AmountRaised/1000),
 		fmt.Sprintf("%.2f%%", GuestRaised/AmountLatest*100),
 		fmt.Sprintf("%.2f", GuestRaised),

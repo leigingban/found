@@ -265,7 +265,7 @@ func (f *Found) AmountBoughtStringGetter() string {
 
 // AmountLatestStringGetter 最新净值
 func (f *Found) AmountLatestStringGetter() string {
-	return fmt.Sprintf("%.2f", f.AmountLatestGetter()/10000)
+	return fmt.Sprintf("%.2f", f.AmountLatestGetter()/1000)
 }
 
 // AmountRaisedStringGetter 最新增量
