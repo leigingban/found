@@ -2,14 +2,14 @@ package manger
 
 import (
 	"fmt"
-	"github.com/leigingban/found/fundspider"
-	"github.com/leigingban/found/models"
-	"github.com/liushuochen/gotable"
-	"github.com/olekukonko/tablewriter"
 	"log"
 	"os"
 	"sort"
 	"strconv"
+
+	"github.com/leigingban/found/models"
+	"github.com/liushuochen/gotable"
+	"github.com/olekukonko/tablewriter"
 )
 
 //默认文件路径
@@ -29,42 +29,18 @@ func (m *Manger) Init() *Manger {
 
 	// 载入本地数据
 	m.dataFromCSV()
+	// 网上获取数据
+	m.update()
+
 	return m
 }
 
-// FetchFundsLatestInfoFrom1234567 更新基金
-func (m *Manger) FetchFundsLatestInfoFrom1234567() {
-	// 返回的一个数据中包含多个基金的资料
-	dataList, err := fundspider.GetFundInfoByIDsV2(m.FoundCodesListGetter())
+// 从网上更新基金信息,作为主要接,从这里调用其他函数
+func (m *Manger) update() {
+	// 调用本地的更新函数
+	err := m.FetchFundsLatestInfoFrom1234567()
 	if err != nil {
-		log.Println("从网络更新数据时发生错误: ", err)
-	}
-	for _, data := range dataList {
-		found := m.getOrAddFoundByCode(data.FCODE)
-		found.UpdateFromData(data)
-	}
-}
-
-// FetchStocksForFunds 获取基金的股票含量
-func (m *Manger) FetchStocksForFunds() {
-
-	// 遍历本地基金，并从网上获取股票信息
-	for foundId, found := range m.Founds {
-		// 获取当前基金的股票信息
-		rawStocks := fundspider.GetFundStocksByFundId(foundId)
-		// 遍历获取到的股票，并以键值对形式保存在m.stocks中
-		for _, rawStock := range rawStocks {
-			// m.stocks中都是唯一值，有则忽略，无则添加
-			stock, ok := m.Stocks[rawStock.GPDM]
-			if !ok {
-				stock = m.NewStockFromRawPtr(&rawStock)
-				m.Stocks[rawStock.GPDM] = stock
-			}
-
-			// 双向表，各自将数据存放在自身的列表中
-			stock.AddFund(found)
-			found.AddStock(stock)
-		}
+		log.Fatal("从网上获取数据失败")
 	}
 
 }
