@@ -15,7 +15,8 @@ func (m *Manger) FetchFundsLatestInfoFrom1234567() error {
 	}
 	for _, data := range dataList {
 		found := m.getOrAddFoundByCode(data.FCODE)
-		found.UpdateFromData(data)
+		// 应用更新数据
+		found.ApplyUpdate(data)
 	}
 	return nil
 }

@@ -3,10 +3,11 @@ package manger
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/leigingban/found/models"
 	"io"
 	"log"
 	"os"
+
+	"github.com/leigingban/found/models"
 )
 
 // csvPathGetter 获取文件路径
@@ -24,7 +25,8 @@ func (m *Manger) getOrAddFoundByCode(foundCode string) *models.Found {
 	found, ok := m.Founds[foundCode]
 	switch ok {
 	case false:
-		newfound := models.CreateFound(foundCode)
+		// 新增基金
+		newfound := new(models.Found).New(foundCode)
 		m.Founds[foundCode] = newfound
 		return newfound
 	default:

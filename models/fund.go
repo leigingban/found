@@ -2,11 +2,12 @@ package models
 
 import (
 	"fmt"
-	"github.com/bluele/gcache"
-	"github.com/leigingban/found/fundspider"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/bluele/gcache"
+	"github.com/leigingban/found/fundspider"
 )
 
 const RateToFix float64 = 3
@@ -16,22 +17,12 @@ var NowYear int
 var NowMonth time.Month
 */
 
+// 定义一个今日日期
 var NowDay int
 
 func init() {
 	//NowYear, NowMonth, NowDay = time.Now().Date()
 	_, _, NowDay = time.Now().Date()
-}
-
-// CreateFound 创建一个Found
-func CreateFound(foundCode string) *Found {
-	found := &Found{}
-	found.Fundcode = foundCode
-	found.Records = []*Record{}
-	found.lowestPoint = &Record{}
-	found.gc = gcache.New(20).LRU().Build()
-	found.stockTags = make(map[string]bool)
-	return found
 }
 
 func isToday(dataString string) bool {
@@ -66,8 +57,18 @@ type Found struct {
 	stockTags     map[string]bool
 }
 
-// UpdateFromData 从网上更新自身信息
-func (f *Found) UpdateFromData(data fundspider.Data) {
+// CreateFound 创建一个Found
+func (f *Found) New(foundCode string) *Found {
+	f.Fundcode = foundCode
+	f.Records = []*Record{}
+	f.lowestPoint = &Record{}
+	f.gc = gcache.New(20).LRU().Build()
+	f.stockTags = make(map[string]bool)
+	return f
+}
+
+// 应用获取到的更新数据
+func (f *Found) ApplyUpdate(data fundspider.Data) {
 	f.Name = data.SHORTNAME
 	f.RateGuess = data.GSZZL
 	f.PriceGuess = data.GSZ
