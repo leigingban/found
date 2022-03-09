@@ -17,7 +17,7 @@ var NowYear int
 var NowMonth time.Month
 */
 
-// 定义一个今日日期
+// NowDay 定义一个今日日期
 var NowDay int
 
 func init() {
@@ -57,7 +57,7 @@ type Found struct {
 	stockTags     map[string]bool
 }
 
-// CreateFound 创建一个Found
+// New 创建一个Found
 func (f *Found) New(foundCode string) *Found {
 	f.Fundcode = foundCode
 	f.Records = []*Record{}
@@ -67,7 +67,7 @@ func (f *Found) New(foundCode string) *Found {
 	return f
 }
 
-// 应用获取到的更新数据
+// ApplyUpdate 应用获取到的更新数据
 func (f *Found) ApplyUpdate(data fundspider.Data) {
 	f.Name = data.SHORTNAME
 	f.RateGuess = data.GSZZL

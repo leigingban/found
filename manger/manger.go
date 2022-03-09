@@ -15,6 +15,13 @@ import (
 //默认文件路径
 const defaultPath = "found.csv"
 
+// 定义一个manger接口
+type manger interface {
+	// 懂分析数据
+	// 统筹更新，记录
+	// 判断
+}
+
 type Manger struct {
 	Founds  map[string]*models.Found //映射，通过id索引相应的found
 	Stocks  map[string]*models.Stock
