@@ -1,9 +1,8 @@
 package main
 
 import (
-	"os"
-
 	"github.com/leigingban/found/manger"
+	"os"
 )
 
 func main() {
